@@ -1,0 +1,37 @@
+# FILE:    .github/workflows/publish.yml
+# CREATED: 2026-11-08 17:10 +03
+# WHAT:    On a v* tag: tests, npm publish with provenance (trusted publishing, no token), GitHub release with the
+#          CHANGELOG section. The MCP Registry entry (server.json) is published separately with mcp-publisher.
+name: Publish to npm
+on:
+  push:
+    tags: ['v*']
+permissions:
+  contents: read
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
+        with:
+          node-version: '22'
+          registry-url: 'https://registry.npmjs.org'
+          cache: npm
+      - name: Upgrade npm for trusted publishing
+        run: npm install -g npm@^11.5.1
+      - run: npm ci
+      - run: npm test
+      - name: Version matches the tag
+        run: test "v$(node -p "require('./package.json').version")" = "$GITHUB_REF_NAME"
+      - run: npm publish --access public --provenance --ignore-scripts
+      - name: GitHub release with the CHANGELOG section
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          V="${GITHUB_REF_NAME#v}"
+          awk "/^## \\[${V}\\]/{f=1; next} /^## \\[/{if(f) exit} f{print}" CHANGELOG.md > /tmp/notes.md
+          gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --latest --notes-file /tmp/notes.md
