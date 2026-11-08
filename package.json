@@ -1,0 +1,22 @@
+{
+  "name": "kwtsms-mcp",
+  "version": "0.1.0",
+  "description": "kwtSMS SMS gateway (Kuwait) as an MCP server: AI assistants send SMS, check balance, sender IDs and coverage, with test mode and send limits by default.",
+  "type": "module",
+  "bin": { "kwtsms-mcp": "src/stdio.js" },
+  "main": "src/server.js",
+  "files": ["src/", "README.md", "LICENSE", "CHANGELOG.md", "SECURITY.md"],
+  "engines": { "node": ">=18" },
+  "scripts": { "test": "node --test test/" },
+  "mcpName": "io.github.kwtsms/kwtsms-mcp",
+  "keywords": ["mcp", "model-context-protocol", "sms", "kwtsms", "kuwait", "otp", "ai", "claude"],
+  "repository": { "type": "git", "url": "git+https://github.com/kwtsms/kwtsms-mcp.git" },
+  "homepage": "https://github.com/kwtsms/kwtsms-mcp#readme",
+  "license": "MIT",
+  "author": "kwtSMS",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.2",
+    "kwtsms": "^0.6.0",
+    "zod": "^4.0.0"
+  }
+}
