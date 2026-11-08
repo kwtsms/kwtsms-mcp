@@ -1,0 +1,106 @@
+{
+  "manifest_version": "0.4",
+  "name": "kwtsms-mcp",
+  "display_name": "kwtSMS",
+  "version": "0.1.0",
+  "description": "Send SMS through kwtSMS (Kuwait): balance, Sender IDs, coverage. Preview and test mode by default.",
+  "long_description": "Lets your AI assistant send SMS through the kwtSMS gateway, check your balance, Sender IDs and coverage, validate numbers and read message status. Safe by default: preview and test sends only until you allow live sending, with per-call, hourly and daily limits and a fixed Sender ID.",
+  "author": {
+    "name": "kwtSMS",
+    "url": "https://www.kwtsms.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kwtsms/kwtsms-mcp"
+  },
+  "homepage": "https://github.com/kwtsms/kwtsms-mcp",
+  "support": "https://www.kwtsms.com/support.html",
+  "license": "MIT",
+  "keywords": [
+    "sms",
+    "kwtsms",
+    "kuwait",
+    "otp"
+  ],
+  "server": {
+    "type": "node",
+    "entry_point": "src/stdio.js",
+    "mcp_config": {
+      "command": "node",
+      "args": [
+        "${__dirname}/src/stdio.js"
+      ],
+      "env": {
+        "KWTSMS_USERNAME": "${user_config.username}",
+        "KWTSMS_PASSWORD": "${user_config.password}",
+        "KWTSMS_SENDER_ID": "${user_config.sender_id}",
+        "KWTSMS_MCP_ALLOW_LIVE": "${user_config.allow_live}"
+      }
+    }
+  },
+  "tools": [
+    {
+      "name": "send_sms",
+      "description": "Preview, test or live SMS send"
+    },
+    {
+      "name": "get_balance",
+      "description": "Credit balance"
+    },
+    {
+      "name": "list_sender_ids",
+      "description": "Sender IDs on the account"
+    },
+    {
+      "name": "check_coverage",
+      "description": "Countries the account can send to"
+    },
+    {
+      "name": "validate_numbers",
+      "description": "Check numbers without sending"
+    },
+    {
+      "name": "get_message_status",
+      "description": "Status of a sent message"
+    }
+  ],
+  "compatibility": {
+    "platforms": [
+      "darwin",
+      "win32",
+      "linux"
+    ],
+    "runtimes": {
+      "node": ">=18.0.0"
+    }
+  },
+  "user_config": {
+    "username": {
+      "type": "string",
+      "title": "kwtSMS API username",
+      "description": "API username from your kwtSMS account (not your mobile number)",
+      "required": true
+    },
+    "password": {
+      "type": "string",
+      "title": "kwtSMS API password",
+      "description": "API password, stored securely",
+      "required": true,
+      "sensitive": true
+    },
+    "sender_id": {
+      "type": "string",
+      "title": "Sender ID",
+      "description": "Used for every send. KWT-SMS is for testing only.",
+      "default": "KWT-SMS",
+      "required": false
+    },
+    "allow_live": {
+      "type": "boolean",
+      "title": "Allow live sending",
+      "description": "Off: preview and test sends only. On: real SMS after you confirm each one.",
+      "default": false,
+      "required": false
+    }
+  }
+}

@@ -1,0 +1,7 @@
+test/
+.github/
+*.mcpb
+server.json
+package-lock.json
+CHANGELOG.md
+.gitignore
