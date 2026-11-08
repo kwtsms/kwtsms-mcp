@@ -41,7 +41,7 @@ export function configFromEnv(env = process.env) {
     username: env.KWTSMS_USERNAME || '',
     password: env.KWTSMS_PASSWORD || '',
     senderId: env.KWTSMS_SENDER_ID || 'KWT-SMS',
-    allowLive: env.KWTSMS_MCP_ALLOW_LIVE === '1',
+    allowLive: ['1', 'true'].includes(String(env.KWTSMS_MCP_ALLOW_LIVE || '').toLowerCase()), // 2026-11-08 18:07 +03: 'true' from Claude Code plugin settings
     maxNumbersPerCall: int(env.KWTSMS_MCP_MAX_NUMBERS, 10),
     maxSendsPerHour: int(env.KWTSMS_MCP_MAX_PER_HOUR, 50),
     maxCreditsPerDay: int(env.KWTSMS_MCP_MAX_CREDITS_PER_DAY, 100),

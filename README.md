@@ -69,7 +69,7 @@ claude mcp add kwtsms --env KWTSMS_USERNAME=your_api_username --env KWTSMS_PASSW
 |---|---|---|
 | `KWTSMS_USERNAME`, `KWTSMS_PASSWORD` | required | kwtSMS API username and password |
 | `KWTSMS_SENDER_ID` | `KWT-SMS` | Sender ID for every send (KWT-SMS is for testing only) |
-| `KWTSMS_MCP_ALLOW_LIVE` | off | `1` allows live sending |
+| `KWTSMS_MCP_ALLOW_LIVE` | off | `1` or `true` allows live sending |
 | `KWTSMS_MCP_MAX_NUMBERS` | 10 | Numbers per call |
 | `KWTSMS_MCP_MAX_PER_HOUR` | 50 | Numbers per hour |
 | `KWTSMS_MCP_MAX_CREDITS_PER_DAY` | 100 | Credits per day |

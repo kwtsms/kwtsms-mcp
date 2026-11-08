@@ -104,6 +104,15 @@ describe('send_sms', () => {
   });
 });
 
+describe('config', () => {
+  it('live sending is on only for 1 or true', () => {
+    assert.equal(configFromEnv({ KWTSMS_MCP_ALLOW_LIVE: '1' }).allowLive, true);
+    assert.equal(configFromEnv({ KWTSMS_MCP_ALLOW_LIVE: 'true' }).allowLive, true);
+    assert.equal(configFromEnv({ KWTSMS_MCP_ALLOW_LIVE: 'false' }).allowLive, false);
+    assert.equal(configFromEnv({}).allowLive, false);
+  });
+});
+
 describe('segments', () => {
   it('GSM-7: 160 is one part, 161 is two', () => {
     assert.equal(segments('a'.repeat(160)).parts, 1);
