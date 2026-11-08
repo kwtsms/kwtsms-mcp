@@ -7,7 +7,7 @@
   "main": "src/server.js",
   "files": ["src/", "README.md", "LICENSE", "CHANGELOG.md", "SECURITY.md"],
   "engines": { "node": ">=18" },
-  "scripts": { "test": "node --test test/" },
+  "scripts": { "test": "node --test test/*.test.js" },
   "mcpName": "io.github.kwtsms/kwtsms-mcp",
   "keywords": ["mcp", "model-context-protocol", "sms", "kwtsms", "kuwait", "otp", "ai", "claude"],
   "repository": { "type": "git", "url": "git+https://github.com/kwtsms/kwtsms-mcp.git" },
