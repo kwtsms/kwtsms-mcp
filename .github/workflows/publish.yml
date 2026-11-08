@@ -1,7 +1,7 @@
 # FILE:    .github/workflows/publish.yml
 # CREATED: 2026-11-08 17:10 +03
 # WHAT:    On a v* tag: tests, npm publish with provenance (trusted publishing, no token), GitHub release with the
-#          CHANGELOG section. The MCP Registry entry (server.json) is published separately with mcp-publisher.
+#          CHANGELOG section, then server.json to the official MCP Registry (mcp-publisher, GitHub OIDC).
 name: Publish to npm
 on:
   push:
@@ -28,6 +28,11 @@ jobs:
       - name: Version matches the tag
         run: test "v$(node -p "require('./package.json').version")" = "$GITHUB_REF_NAME"
       - run: npm publish --access public --provenance --ignore-scripts
+      - name: Publish to the MCP Registry (GitHub OIDC, no secret)
+        run: |
+          curl -sL "https://github.com/modelcontextprotocol/registry/releases/download/v1.8.8/mcp-publisher_linux_amd64.tar.gz" | tar xz mcp-publisher
+          ./mcp-publisher login github-oidc
+          ./mcp-publisher publish
       - name: GitHub release with the CHANGELOG section
         env:
           GH_TOKEN: ${{ github.token }}
