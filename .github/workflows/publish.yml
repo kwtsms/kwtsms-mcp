@@ -27,7 +27,11 @@ jobs:
       - run: npm test
       - name: Version matches the tag
         run: test "v$(node -p "require('./package.json').version")" = "$GITHUB_REF_NAME"
+      # trusted publishing (OIDC) after the first release; the very first publish of a new package uses the
+      # one-time NPM_TOKEN secret, which is deleted afterwards
       - run: npm publish --access public --provenance --ignore-scripts
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Publish to the MCP Registry (GitHub OIDC, no secret)
         run: |
           curl -sL "https://github.com/modelcontextprotocol/registry/releases/download/v1.8.8/mcp-publisher_linux_amd64.tar.gz" | tar xz mcp-publisher
