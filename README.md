@@ -1,75 +1,95 @@
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/kwtsms/kwtsms-mcp/main/.github/assets/readme-header-dark.png">
+  <img alt="kwtSMS: SMS gateway for Kuwait" src="https://raw.githubusercontent.com/kwtsms/kwtsms-mcp/main/.github/assets/readme-header-light.png">
+</picture>
+
 # kwtSMS MCP server
 
-Send SMS from your AI assistant. Tell Claude, Cursor, VS Code or any MCP client what to send and to whom, in plain
-English or Arabic; it writes the message, fixes the numbers, shows you the cost, and sends through
-[kwtSMS](https://www.kwtsms.com), the SMS gateway in Kuwait. Safe by default: nothing reaches a phone until you, the
-account owner, switch live sending on.
+[![npm](https://img.shields.io/npm/v/kwtsms-mcp)](https://www.npmjs.com/package/kwtsms-mcp)
+[![CI](https://github.com/kwtsms/kwtsms-mcp/actions/workflows/ci.yml/badge.svg)](https://github.com/kwtsms/kwtsms-mcp/actions/workflows/ci.yml)
+[![Node](https://img.shields.io/badge/Node-18%2B-339933?logo=node.js&logoColor=white)](https://nodejs.org)
+[![MCP Registry](https://img.shields.io/badge/MCP%20Registry-io.github.kwtsms%2Fkwtsms--mcp-blue)](https://registry.modelcontextprotocol.io)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+
+Send SMS from your AI assistant, through kwtSMS, the Kuwaiti SMS gateway. Tell Claude, Cursor, VS Code or any MCP
+client what to send and to whom, in English or Arabic: it writes the message, fixes the numbers, shows you the cost,
+and sends when you say yes. Free and open source.
+
+kwtSMS delivers to Zain, Ooredoo, stc and Virgin in Kuwait and to more than 200 countries, with your own Sender ID,
+free API testing and credits that do not expire.
 
 ## What you can do with it
 
-**Market to your customers.** "Here is my customer list. Write a short Arabic offer for the weekend sale and send it
-to everyone." The assistant writes the text, removes duplicates and broken numbers, shows how many messages and credits
-it will use, and sends when you say yes.
+- **Market to your customers.** "Here is my customer list. Write a short Arabic offer for the weekend sale and send it
+  to everyone." The assistant writes the text, removes duplicates and broken numbers, shows how many messages and
+  credits it will use, and sends when you approve.
+- **Notify customers.** "Text everyone in this sheet whose order is ready." "Remind everyone booked for tomorrow."
+  "Send a payment reminder to the customers marked overdue." Your data, your words, no code.
+- **Alert yourself.** "When the build finishes, text me." "If the tests fail, send me an SMS." An agent that runs on a
+  schedule can text you the morning sales total or a server warning.
+- **Write better messages.** Ask for a version that fits in one SMS, or an Arabic and an English version. Arabic fits
+  70 characters in one SMS and English 160: the assistant counts it for you.
+- **Run your account by asking.** "What is my balance?" "Which Sender IDs do I have?" "Can I send to Saudi numbers?"
+  "Did my last message arrive?"
+- **Build and test.** Developers try their SMS flows in test mode, straight from the editor, without delivering
+  anything.
 
-**Notify customers.** "Text everyone in this sheet whose order is ready." "Remind everyone booked for tomorrow."
-"Send a payment reminder to the customers marked overdue." Your data, your words, no code.
-
-**Alert yourself.** "When the build finishes, text me." "If the tests fail, send me an SMS." An agent that runs on a
-schedule can text you the morning sales total or a server warning.
-
-**Write better messages.** Ask for a shorter version that fits in one SMS, an Arabic and an English version, or the
-cost before you commit. Arabic uses 70 characters per SMS and English 160: the assistant counts it for you.
-
-**Run your account by asking.** "What is my balance?" "Which Sender IDs do I have?" "Can I send to Saudi numbers?"
-"Did my last message arrive?"
-
-**Build and test.** Developers test their SMS flows in test mode, without delivering anything, straight from the
-editor.
-
-## Why it is better than calling the API yourself
+## Features
 
 - **Plain language in, correct request out.** No code, no JSON, no API manual.
 - **Numbers fixed for you.** Arabic and Persian digits, `+`, `00`, spaces and an extra `0` after the country code are
-  corrected; duplicates are removed; invalid numbers are listed with the reason, before anything is sent. It uses the
-  same rules as our official [JavaScript library](https://github.com/kwtsms/kwtsms-js).
+  corrected, duplicates removed, and invalid numbers listed with the reason before anything is sent. Same rules as our
+  official [JavaScript library](https://github.com/kwtsms/kwtsms-js).
 - **Clean messages.** Emoji, hidden characters and HTML that make a message fail or cost more are removed first.
-- **Cost before sending.** Every send starts as a preview: numbers, SMS parts, credits.
-- **Guard rails you control.** Live sending off by default, confirmation for every live send, hourly and daily limits,
-  allowed countries, your own Sender ID only. Raise the limits in the settings when you send to bigger lists.
+- **Cost before sending.** Every send starts as a preview: numbers, SMS parts and credits.
+- **Safe by default.** Live sending is off until you, the account owner, switch it on (see [Safety](#safety)).
 
 ## Tools
 
 | Tool | What it does |
 |---|---|
-| `send_sms` | Preview (default), test or live send to up to 10 numbers |
+| `send_sms` | Preview (default), test or live send to up to 10 numbers per call |
 | `get_balance` | Your credit balance |
 | `list_sender_ids` | Sender IDs on your account |
 | `check_coverage` | Countries your account can send to |
 | `validate_numbers` | Checks numbers without sending |
 | `get_message_status` | Status of a sent message |
 
-## Safety
+## Get started in 3 steps
 
-An AI model can be tricked by a web page or an email it reads. The server, not the model, enforces these rules:
+1. **Open a free account** at https://www.kwtsms.com/cportal/signup/ (free test account, no papers).
+2. **Copy your API username and API password** from the API Information page of your kwtSMS account. They are not
+   your mobile number or your account login.
+3. **Install** for your AI tool (below) and ask: "What is my kwtSMS balance?"
 
-- **Preview by default.** `send_sms` only checks the numbers and counts parts and credits.
-- **Test mode** (`mode: "test"`) sends with test=1: the message is never delivered, and its credits are held until you
-  delete it from the Queue in your kwtSMS account.
-- **Live sending** works only when you set `KWTSMS_MCP_ALLOW_LIVE=1`, and every live send needs `confirm: true`.
-- **Limits**: 10 numbers per call, 50 numbers an hour, 100 credits a day, Kuwait numbers only (change with the settings
-  below).
-- **Your Sender ID** is fixed in your settings; the model cannot choose another one.
-- **No double sends**: a repeated `client_ref` returns the first result.
-- Your password is never logged or shown, and phone numbers are masked in results.
+Your first sends run in test mode: they are not delivered, and nothing reaches a phone.
 
-Use a dedicated kwtSMS API user for AI tools, not your main login.
+## Requirements
 
-## Install
+- A kwtSMS account (free test account, no papers): https://www.kwtsms.com/cportal/signup/
+- Node.js 18 or newer (not needed for the Claude Desktop extension, which runs on the Node.js built into Claude
+  Desktop)
+- Any MCP client: Claude Desktop, Claude Code, Cursor, VS Code and others
 
-Needs Node.js 18 or newer. Get your API username and password from your kwtSMS account
-([sign up](https://www.kwtsms.com/cportal/signup/)).
+## Installation
 
-**Claude Desktop, easiest:** download `kwtsms-mcp.mcpb` from the [latest release](https://github.com/kwtsms/kwtsms-mcp/releases/latest) and open it with Claude Desktop (macOS or Windows). An install window opens and asks for your API username and password; nothing else to install.
+**Claude Desktop (easiest).** Download `kwtsms-mcp.mcpb` from the
+[latest release](https://github.com/kwtsms/kwtsms-mcp/releases/latest) and open it with Claude Desktop (macOS or
+Windows). An install window asks for your API username and password. Nothing else to install.
+
+**Claude Code (easiest).** Install the kwtSMS plugin, which adds this server and a kwtSMS skill:
+
+```bash
+claude plugin marketplace add kwtsms/kwtsms-ai
+claude plugin install kwtsms@kwtsms
+```
+
+Or add the server only:
+
+```bash
+claude mcp add kwtsms --env KWTSMS_USERNAME=your_api_username --env KWTSMS_PASSWORD=your_api_password \
+  --env KWTSMS_SENDER_ID=YOUR-SENDER -- npx -y kwtsms-mcp
+```
 
 **Claude Desktop, by hand** (`claude_desktop_config.json`):
 
@@ -89,14 +109,8 @@ Needs Node.js 18 or newer. Get your API username and password from your kwtSMS a
 }
 ```
 
-**Claude Code**:
-
-```bash
-claude mcp add kwtsms --env KWTSMS_USERNAME=your_api_username --env KWTSMS_PASSWORD=your_api_password \
-  --env KWTSMS_SENDER_ID=YOUR-SENDER -- npx -y kwtsms-mcp
-```
-
-**Cursor, VS Code and other clients**: the same command (`npx -y kwtsms-mcp`) and environment variables.
+**Cursor, VS Code and other MCP clients.** Add a server with the command `npx -y kwtsms-mcp` and the same environment
+variables, in the MCP settings of your tool.
 
 ## Settings
 
@@ -111,34 +125,74 @@ claude mcp add kwtsms --env KWTSMS_USERNAME=your_api_username --env KWTSMS_PASSW
 | `KWTSMS_MCP_ALLOWED_PREFIXES` | `965` | Allowed country codes, comma separated |
 | `KWTSMS_LOG_FILE` | off | Log file of API calls (password masked) |
 
-Run `npx -y kwtsms-mcp --help` for the same list.
+Sending to a bigger list? Raise the limits above. Run `npx -y kwtsms-mcp --help` for the same list.
+
+## Safety
+
+An AI model can be tricked by a web page or an email it reads. The server, not the model, enforces these rules:
+
+- **Preview by default.** `send_sms` only checks the numbers and counts parts and credits.
+- **Test mode** (`mode: "test"`) sends with test=1: the message is never delivered, and its credits are held until you
+  delete it from the Sending Queue in your kwtSMS account.
+- **Live sending** works only when you set `KWTSMS_MCP_ALLOW_LIVE=1`, and every live send needs `confirm: true`.
+- **Limits**: 10 numbers per call, 50 numbers an hour, 100 credits a day, Kuwait numbers only (change them in
+  [Settings](#settings)).
+- **Your Sender ID** is fixed in your settings; the model cannot choose another one.
+- **No double sends**: a repeated `client_ref` returns the first result.
+- Your password is never logged or shown, and phone numbers are masked in results.
+
+Use a dedicated kwtSMS API user for AI tools, not your main login.
 
 ## Example
 
 > "Send 'Your order is ready' to 965XXXXXXXX"
 
-The assistant previews first: one number, 1 part, 1 credit, Sender ID YOUR-SENDER. You approve, it sends in test or
-live mode as you allowed.
+The assistant previews first: one number, 1 part, 1 credit, Sender ID YOUR-SENDER. You approve, and it sends in test
+or live mode, as you allowed.
 
-## بالعربي
+## Arabic
 
 أرسل رسائل SMS من مساعد الذكاء الاصطناعي. اكتب لـ Claude أو Cursor أو أي برنامج يدعم MCP ما تريد إرساله ولمن، بالعربي
 أو الإنجليزي، فيكتب الرسالة ويصحح الأرقام ويعرض لك عدد النقاط قبل الإرسال عبر kwtSMS.
 
-أمثلة:
 - التسويق لعملائك: "هذه قائمة عملائي، اكتب عرضاً قصيراً بالعربي وأرسله للجميع".
 - إشعار العملاء: طلب جاهز، تذكير بموعد، تذكير بالدفع، من جدولك مباشرة.
 - تنبيهك أنت: "أرسل لي رسالة عندما ينتهي العمل" أو ملخص المبيعات كل صباح.
 - إدارة حسابك بالسؤال: الرصيد، اسم المرسل، الدول المتاحة، حالة الرسالة.
 
-الأرقام تُصحح تلقائياً (الأرقام العربية، 00، +، المسافات) وتُحذف المكررة، والرسالة تُنظف من الرموز التي ترفع التكلفة.
-الوضع الافتراضي معاينة فقط دون إرسال. الإرسال التجريبي لا يصل إلى الهاتف، وتبقى نقاطه محجوزة حتى تحذفه من طابور
-الارسال. الإرسال الفعلي لا يعمل إلا إذا فعّله صاحب الحساب بالإعداد `KWTSMS_MCP_ALLOW_LIVE=1`.
+البداية: افتح حساباً مجانياً على https://www.kwtsms.com/cportal/signup/ ثم انسخ اسم المستخدم وكلمة المرور من صفحة
+تفاصيل البوابة في حسابك. الأرقام تُصحح تلقائياً (الأرقام العربية، 00، +، المسافات) وتُحذف المكررة. الوضع الافتراضي
+معاينة فقط دون إرسال. الإرسال التجريبي لا يصل إلى الهاتف، وتبقى نقاطه محجوزة حتى تحذفه من طابور الارسال. الإرسال
+الفعلي لا يعمل إلا إذا فعّله صاحب الحساب بالإعداد `KWTSMS_MCP_ALLOW_LIVE=1`.
+
+## FAQ
+
+**Which username do I use?** The API username and password from the API Information page of your kwtSMS account, not
+your mobile number or account login.
+
+**Why do test messages not arrive?** Test mode queues messages without delivering them. Set
+`KWTSMS_MCP_ALLOW_LIVE=1` when you are ready to send for real.
+
+**What is a Sender ID?** The name shown as the sender on the phone. See the
+[Sender ID help](https://www.kwtsms.com/sender-id-help.html).
+
+**Can the AI send without me?** Not by default. Live sending must be switched on by you, every live send needs a
+confirmation, and the hourly and daily limits apply.
+
+## Changelog
+
+See [CHANGELOG.md](CHANGELOG.md).
 
 ## Support
 
-[kwtsms.com/support.html](https://www.kwtsms.com/support.html). Security reports: see [SECURITY.md](SECURITY.md).
+Help: https://www.kwtsms.com/support.html | FAQ: https://www.kwtsms.com/faq/ |
+API: [developers](https://www.kwtsms.com/developers.html), [API reference](https://www.kwtsms.com/api-documentation.html) |
+[Issues](https://github.com/kwtsms/kwtsms-mcp/issues)
+
+## Security
+
+See [SECURITY.md](SECURITY.md).
 
 ## License
 
-MIT
+MIT, (c) kwtSMS (BoxLink Center).
