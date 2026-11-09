@@ -77,12 +77,15 @@ Your first sends run in test mode: they are not delivered, and nothing reaches a
 [latest release](https://github.com/kwtsms/kwtsms-mcp/releases/latest) and open it with Claude Desktop (macOS or
 Windows). An install window asks for your API username and password. Nothing else to install.
 
-**Claude Code (easiest).** Install the kwtSMS plugin, which adds this server and a kwtSMS skill:
+**Claude Code (easiest).** One command installs the kwtSMS plugin, which adds this server and a kwtSMS skill:
 
 ```bash
-claude plugin marketplace add kwtsms/kwtsms-ai
-claude plugin install kwtsms@kwtsms
+claude plugin install kwtsms --marketplace kwtsms/kwtsms-ai
 ```
+
+Inside Claude Code: `/plugin install kwtsms --marketplace kwtsms/kwtsms-ai`, then `/plugin configure kwtsms@kwtsms` to
+enter your API username and password. Needs Claude Code 2.1.292 or newer; older versions:
+`claude plugin marketplace add kwtsms/kwtsms-ai`, then `claude plugin install kwtsms@kwtsms`.
 
 Or add the server only:
 
