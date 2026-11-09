@@ -182,6 +182,10 @@ your mobile number or account login.
 **Can the AI send without me?** Not by default. Live sending must be switched on by you, every live send needs a
 confirmation, and the hourly and daily limits apply.
 
+**The API stopped answering after a wrong password.** Repeated wrong-password calls from one address get that
+address blocked. Fix the API username and password, then contact [kwtSMS support](https://www.kwtsms.com/support.html)
+to unblock it.
+
 ## Changelog
 
 See [CHANGELOG.md](CHANGELOG.md).
