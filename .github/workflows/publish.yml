@@ -3,9 +3,16 @@
 # WHAT:    On a v* tag: tests, npm publish with provenance (trusted publishing, no token), GitHub release with the
 #          CHANGELOG section, then server.json to the official MCP Registry (mcp-publisher, GitHub OIDC).
 name: Publish to npm
+# 2026-11-09 08:49 +03: workflow_dispatch to finish a release whose tag run stopped part way (0.1.0: npm took the
+#          version, the MCP Registry asked before npm served it); every step now skips what is already done.
 on:
   push:
     tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Existing tag to finish publishing, for example v0.1.0'
+        required: true
 permissions:
   contents: read
 jobs:
@@ -14,8 +21,12 @@ jobs:
     permissions:
       contents: write
       id-token: write
+    env:
+      TAG: ${{ inputs.tag || github.ref_name }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          ref: ${{ inputs.tag || github.ref }}
       - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1  # v7.1.0
         with:
           node-version: '22'
@@ -26,12 +37,21 @@ jobs:
       - run: npm ci
       - run: npm test
       - name: Version matches the tag
-        run: test "v$(node -p "require('./package.json').version")" = "$GITHUB_REF_NAME"
+        run: test "v$(node -p "require('./package.json').version")" = "$TAG"
       # trusted publishing (OIDC) after the first release; the very first publish of a new package uses the
       # one-time NPM_TOKEN secret, which is deleted afterwards
-      - run: npm publish --access public --provenance --ignore-scripts
+      - name: npm publish (skipped when npm already has this version)
+        run: |
+          V="${TAG#v}"
+          if npm view "kwtsms-mcp@$V" version >/dev/null 2>&1; then echo "npm already has $V"; exit 0; fi
+          npm publish --access public --provenance --ignore-scripts
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+      - name: Wait until npm serves the version (the MCP Registry checks npm)
+        run: |
+          V="${TAG#v}"
+          for i in $(seq 1 40); do npm view "kwtsms-mcp@$V" version >/dev/null 2>&1 && exit 0; sleep 15; done
+          echo "npm does not serve $V after 10 minutes"; exit 1
       - name: Publish to the MCP Registry (GitHub OIDC, no secret)
         run: |
           curl -sL "https://github.com/modelcontextprotocol/registry/releases/download/v1.8.8/mcp-publisher_linux_amd64.tar.gz" | tar xz mcp-publisher
@@ -41,6 +61,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          V="${GITHUB_REF_NAME#v}"
+          V="${TAG#v}"
+          if gh release view "$TAG" >/dev/null 2>&1; then echo "release $TAG exists"; exit 0; fi
           awk "/^## \\[${V}\\]/{f=1; next} /^## \\[/{if(f) exit} f{print}" CHANGELOG.md > /tmp/notes.md
-          gh release create "$GITHUB_REF_NAME" --title "$GITHUB_REF_NAME" --latest --notes-file /tmp/notes.md
+          gh release create "$TAG" --title "$TAG" --latest --notes-file /tmp/notes.md
