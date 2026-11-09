@@ -1,8 +1,41 @@
 # kwtSMS MCP server
 
-Let AI assistants (Claude, Cursor, VS Code, any MCP client) send SMS, check your balance, Sender IDs and coverage
-through [kwtSMS](https://www.kwtsms.com), the SMS gateway in Kuwait. Safe by default: nothing reaches a phone until
-you, the account owner, switch live sending on.
+Send SMS from your AI assistant. Tell Claude, Cursor, VS Code or any MCP client what to send and to whom, in plain
+English or Arabic; it writes the message, fixes the numbers, shows you the cost, and sends through
+[kwtSMS](https://www.kwtsms.com), the SMS gateway in Kuwait. Safe by default: nothing reaches a phone until you, the
+account owner, switch live sending on.
+
+## What you can do with it
+
+**Market to your customers.** "Here is my customer list. Write a short Arabic offer for the weekend sale and send it
+to everyone." The assistant writes the text, removes duplicates and broken numbers, shows how many messages and credits
+it will use, and sends when you say yes.
+
+**Notify customers.** "Text everyone in this sheet whose order is ready." "Remind everyone booked for tomorrow."
+"Send a payment reminder to the customers marked overdue." Your data, your words, no code.
+
+**Alert yourself.** "When the build finishes, text me." "If the tests fail, send me an SMS." An agent that runs on a
+schedule can text you the morning sales total or a server warning.
+
+**Write better messages.** Ask for a shorter version that fits in one SMS, an Arabic and an English version, or the
+cost before you commit. Arabic uses 70 characters per SMS and English 160: the assistant counts it for you.
+
+**Run your account by asking.** "What is my balance?" "Which Sender IDs do I have?" "Can I send to Saudi numbers?"
+"Did my last message arrive?"
+
+**Build and test.** Developers test their SMS flows in test mode, without delivering anything, straight from the
+editor.
+
+## Why it is better than calling the API yourself
+
+- **Plain language in, correct request out.** No code, no JSON, no API manual.
+- **Numbers fixed for you.** Arabic and Persian digits, `+`, `00`, spaces and an extra `0` after the country code are
+  corrected; duplicates are removed; invalid numbers are listed with the reason, before anything is sent. It uses the
+  same rules as our official [JavaScript library](https://github.com/kwtsms/kwtsms-js).
+- **Clean messages.** Emoji, hidden characters and HTML that make a message fail or cost more are removed first.
+- **Cost before sending.** Every send starts as a preview: numbers, SMS parts, credits.
+- **Guard rails you control.** Live sending off by default, confirmation for every live send, hourly and daily limits,
+  allowed countries, your own Sender ID only. Raise the limits in the settings when you send to bigger lists.
 
 ## Tools
 
@@ -89,9 +122,18 @@ live mode as you allowed.
 
 ## بالعربي
 
-يتيح هذا الخادم لمساعدات الذكاء الاصطناعي إرسال رسائل SMS عبر kwtSMS ومعرفة الرصيد واسم المرسل. الوضع الافتراضي
-معاينة فقط دون إرسال. الإرسال التجريبي لا يصل إلى الهاتف، وتبقى نقاطه محجوزة حتى تحذفه من طابور الارسال. الإرسال
-الفعلي لا يعمل إلا إذا فعّله صاحب الحساب بالإعداد `KWTSMS_MCP_ALLOW_LIVE=1`.
+أرسل رسائل SMS من مساعد الذكاء الاصطناعي. اكتب لـ Claude أو Cursor أو أي برنامج يدعم MCP ما تريد إرساله ولمن، بالعربي
+أو الإنجليزي، فيكتب الرسالة ويصحح الأرقام ويعرض لك عدد النقاط قبل الإرسال عبر kwtSMS.
+
+أمثلة:
+- التسويق لعملائك: "هذه قائمة عملائي، اكتب عرضاً قصيراً بالعربي وأرسله للجميع".
+- إشعار العملاء: طلب جاهز، تذكير بموعد، تذكير بالدفع، من جدولك مباشرة.
+- تنبيهك أنت: "أرسل لي رسالة عندما ينتهي العمل" أو ملخص المبيعات كل صباح.
+- إدارة حسابك بالسؤال: الرصيد، اسم المرسل، الدول المتاحة، حالة الرسالة.
+
+الأرقام تُصحح تلقائياً (الأرقام العربية، 00، +، المسافات) وتُحذف المكررة، والرسالة تُنظف من الرموز التي ترفع التكلفة.
+الوضع الافتراضي معاينة فقط دون إرسال. الإرسال التجريبي لا يصل إلى الهاتف، وتبقى نقاطه محجوزة حتى تحذفه من طابور
+الارسال. الإرسال الفعلي لا يعمل إلا إذا فعّله صاحب الحساب بالإعداد `KWTSMS_MCP_ALLOW_LIVE=1`.
 
 ## Support
 
