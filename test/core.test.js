@@ -213,3 +213,15 @@ describe('rate guard', () => {
     assert.equal(configFromEnv({ KWTSMS_MCP_MAX_NUMBERS: '5000' }).maxNumbersPerCall, 200);
   });
 });
+
+// 2026-11-09 16:22 +03: Claude plugin option names (CLAUDE_PLUGIN_OPTION_*)
+describe('plugin option names', () => {
+  it('reads CLAUDE_PLUGIN_OPTION_* when the KWTSMS_* name is not set', () => {
+    const c = configFromEnv({ CLAUDE_PLUGIN_OPTION_USERNAME: 'u', CLAUDE_PLUGIN_OPTION_PASSWORD: 'p', CLAUDE_PLUGIN_OPTION_ALLOW_LIVE: 'true', CLAUDE_PLUGIN_OPTION_MAX_NUMBERS: '25', CLAUDE_PLUGIN_OPTION_ALLOWED_COUNTRIES: '965,966' });
+    assert.equal(c.username, 'u'); assert.equal(c.password, 'p'); assert.equal(c.allowLive, true);
+    assert.equal(c.maxNumbersPerCall, 25); assert.deepEqual(c.allowedPrefixes, ['965', '966']);
+  });
+  it('KWTSMS_* wins when both are set', () => {
+    assert.equal(configFromEnv({ KWTSMS_USERNAME: 'a', CLAUDE_PLUGIN_OPTION_USERNAME: 'b' }).username, 'a');
+  });
+});

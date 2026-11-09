@@ -35,7 +35,24 @@ export function segments(text) {
 }
 
 /** Reads the operator's settings from the environment; nothing here can be changed by the AI model. */
-export function configFromEnv(env = process.env) {
+// 2026-11-09 16:22 +03: Claude plugin settings arrive as CLAUDE_PLUGIN_OPTION_<KEY> (Anthropic directory lint); the
+// KWTSMS_* names keep working for every other client. A KWTSMS_* value wins when both are set.
+const PLUGIN_NAMES = {
+  KWTSMS_USERNAME: 'USERNAME', KWTSMS_PASSWORD: 'PASSWORD', KWTSMS_SENDER_ID: 'SENDER_ID', KWTSMS_MCP_ALLOW_LIVE: 'ALLOW_LIVE',
+  KWTSMS_MCP_MAX_NUMBERS: 'MAX_NUMBERS', KWTSMS_MCP_MAX_PER_HOUR: 'MAX_PER_HOUR',
+  KWTSMS_MCP_MAX_CREDITS_PER_DAY: 'MAX_CREDITS_PER_DAY', KWTSMS_MCP_ALLOWED_PREFIXES: 'ALLOWED_COUNTRIES',
+};
+export function withPluginOptions(env) {
+  const out = { ...env };
+  for (const [ours, key] of Object.entries(PLUGIN_NAMES)) {
+    const v = env[`CLAUDE_PLUGIN_OPTION_${key}`];
+    if (!out[ours] && v !== undefined && v !== '') out[ours] = v;
+  }
+  return out;
+}
+
+export function configFromEnv(rawEnv = process.env) {
+  const env = withPluginOptions(rawEnv);
   const int = (v, d) => (Number.isInteger(Number(v)) && Number(v) > 0 ? Number(v) : d);
   return {
     username: env.KWTSMS_USERNAME || '',

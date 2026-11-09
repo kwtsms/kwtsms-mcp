@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.2.1] - 2026-11-09
+
+### Changed
+- Also reads its settings from the standard Claude plugin option names, so the kwtSMS plugin for Claude passes settings the way Anthropic recommends.
+
 ## [0.2.0] - 2026-11-09
 
 ### Changed
