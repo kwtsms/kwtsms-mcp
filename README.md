@@ -48,7 +48,9 @@ free API testing and credits that do not expire.
 
 | Tool | What it does |
 |---|---|
-| `send_sms` | Preview (default), test or live send to up to 10 numbers per call |
+| `preview_sms` | Checks the numbers, cleans the message, counts SMS parts and credits. Sends nothing |
+| `send_test_sms` | Test send (test=1): not delivered to any phone |
+| `send_sms` | Real SMS to up to 10 numbers per call, only when live sending is on |
 | `get_balance` | Your credit balance |
 | `list_sender_ids` | Sender IDs on your account |
 | `check_coverage` | Countries your account can send to |
@@ -134,10 +136,11 @@ Sending to a bigger list? Raise the limits above. Run `npx -y kwtsms-mcp --help`
 
 An AI model can be tricked by a web page or an email it reads. The server, not the model, enforces these rules:
 
-- **Preview by default.** `send_sms` only checks the numbers and counts parts and credits.
-- **Test mode** (`mode: "test"`) sends with test=1: the message is never delivered, and its credits are held until you
+- **Preview first.** `preview_sms` only checks the numbers and counts parts and credits; it makes no network call.
+- **Test mode** (`send_test_sms`) sends with test=1: the message is never delivered, and its credits are held until you
   delete it from the Sending Queue in your kwtSMS account.
-- **Live sending** works only when you set `KWTSMS_MCP_ALLOW_LIVE=1`, and every live send needs `confirm: true`.
+- **Live sending** (`send_sms`) works only when you set `KWTSMS_MCP_ALLOW_LIVE=1`. It is marked as an action that
+  changes things, so your AI tool asks you before each real send.
 - **Limits**: 10 numbers per call, 50 numbers an hour, 100 credits a day, Kuwait numbers only (change them in
   [Settings](#settings)).
 - **Your Sender ID** is fixed in your settings; the model cannot choose another one.

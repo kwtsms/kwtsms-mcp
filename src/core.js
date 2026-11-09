@@ -134,69 +134,118 @@ export function createTools({ client, liveClient = null, config, now = () => Dat
     return null;
   }
 
+  // 2026-11-09 15:35 +03: 0.2.0, Anthropic directory rules (read and write in separate tools; descriptions state facts only):
+  // preview_sms is read-only and local, send_test_sms delivers nothing, send_sms is the live send. send_sms still
+  // accepts the 0.1.x `mode` argument (preview, test) so older prompts keep working; it says so in its result.
+  const NOTE_TEST = 'Test send: not delivered; its credits are held until you delete it from the Sending Queue in your kwtSMS account.';
+  const NOTE_OLD = 'mode is from kwtsms-mcp 0.1; use preview_sms or send_test_sms.';
+
+  function summaryOf(p, kind) {
+    return {
+      kind,
+      sender: config.senderId,
+      recipients: p.valid.map(mask),
+      invalid: p.invalid.map((i) => ({ input: mask(i.input), error: i.error })),
+      message: p.cleaned,
+      encoding: p.seg.encoding,
+      characters: p.seg.characters,
+      parts_per_number: p.seg.parts,
+      estimated_credits: p.credits,
+    };
+  }
+
+  async function doSend(kind, { mobiles, message, client_ref: ref }, extraNote) {
+    if (ref && refs.has(ref)) return text({ ...refs.get(ref), note: 'Already sent with this client_ref; not sent again.' });
+    const p = prepare(mobiles, message);
+    if (p.error) return fail(p.error);
+    const summary = summaryOf(p, kind);
+    if (p.valid.length === 0) return fail('No valid numbers to send to.');
+    const blocked = capsBlock(p.valid.length, p.credits);
+    if (blocked) return fail(blocked);
+    const api = kind === 'live' ? liveClient : client;
+    const r = await api.send(p.valid, p.cleaned, config.senderId);
+    const ok = r && (r.result === 'OK' || r.result === 'PARTIAL');
+    if (ok) sentLog.push({ at: now(), numbers: p.valid.length, credits: Number(r['points-charged'] ?? p.credits) });
+    const note = [kind === 'test' ? NOTE_TEST : '', extraNote || ''].filter(Boolean).join(' ') || undefined;
+    const out = {
+      ...summary,
+      sent: ok,
+      result: r?.result,
+      msg_id: r?.['msg-id'],
+      credits_charged: r?.['points-charged'],
+      balance_after: r?.['balance-after'],
+      error: ok ? undefined : [r?.code, r?.description, r?.action].filter(Boolean).join(': '),
+      note,
+    };
+    if (ok && ref) refs.set(ref, out);
+    return ok ? text(out) : { isError: true, content: [{ type: 'text', text: JSON.stringify(out, null, 2) }] };
+  }
+
+  const SEND_INPUT = {
+    mobiles: { type: 'array', items: 'string', required: true, description: 'Phone numbers in international format, for example 965XXXXXXXX' },
+    message: { type: 'string', required: true, description: 'SMS text, Arabic or English' },
+  };
+  const REF_INPUT = { client_ref: { type: 'string', description: 'Optional id for this send; a repeated id returns the first result and sends nothing' } };
+
   return {
+    preview_sms: {
+      title: 'Preview SMS',
+      description:
+        'Checks and normalizes the phone numbers, cleans the message, and counts SMS parts and credits. Sends nothing ' +
+        'and makes no network call. Shows the Sender ID that sending uses.',
+      annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
+      input: { ...SEND_INPUT },
+      async handler({ mobiles, message }) {
+        const p = prepare(mobiles, message);
+        if (p.error) return fail(p.error);
+        return text({ ...summaryOf(p, 'preview'), sent: false });
+      },
+    },
+
+    send_test_sms: {
+      title: 'Send test SMS',
+      description:
+        'Sends the SMS through kwtSMS in test mode (test=1): it is not delivered to any phone. Its credits are held ' +
+        'until the message is deleted from the Sending Queue in the kwtSMS account. Hourly and daily limits apply.',
+      annotations: { readOnlyHint: false, destructiveHint: false, idempotentHint: false, openWorldHint: true },
+      input: { ...SEND_INPUT, ...REF_INPUT },
+      async handler(args) {
+        return doSend('test', args);
+      },
+    },
+
     send_sms: {
       title: 'Send SMS',
       description:
-        'Send an SMS through kwtSMS. mode "preview" (default) only checks numbers and counts parts and credits, nothing ' +
-        'is sent. mode "test" sends with test=1: never delivered, credits held until it is deleted from the Queue in ' +
-        'the kwtSMS account. mode "live" delivers to real phones and costs credits: only works when the account owner enabled live ' +
-        'sending, and needs confirm=true after the user has seen the preview. The sender ID is fixed by the owner.',
-      annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: true, idempotentHint: false },
+        'Sends the SMS through kwtSMS to real phones and charges credits. Works only when the account owner switched ' +
+        'live sending on (KWTSMS_MCP_ALLOW_LIVE) and requires confirm: true. The Sender ID is the one the owner set. ' +
+        'Hourly and daily limits apply.',
+      annotations: { readOnlyHint: false, destructiveHint: true, idempotentHint: false, openWorldHint: true },
       input: {
-        mobiles: { type: 'array', items: 'string', required: true, description: 'Phone numbers in international format, e.g. 965XXXXXXXX' },
-        message: { type: 'string', required: true, description: 'SMS text (Arabic or English)' },
-        mode: { type: 'string', enum: ['preview', 'test', 'live'], description: 'preview (default), test or live' },
-        confirm: { type: 'boolean', description: 'Must be true for mode live' },
-        client_ref: { type: 'string', description: 'Optional id for this send; repeating it returns the first result instead of sending again' },
+        ...SEND_INPUT,
+        confirm: { type: 'boolean', description: 'Must be true to send' },
+        ...REF_INPUT,
+        mode: { type: 'string', enum: ['preview', 'test', 'live'], description: 'Deprecated (0.1.x): preview and test map to preview_sms and send_test_sms' },
       },
-      async handler({ mobiles, message, mode = 'preview', confirm = false, client_ref: ref }) {
-        if (ref && refs.has(ref)) return text({ ...refs.get(ref), note: 'Already sent with this client_ref; not sent again.' });
-        const p = prepare(mobiles, message);
-        if (p.error) return fail(p.error);
-        const summary = {
-          mode,
-          sender: config.senderId,
-          recipients: p.valid.map(mask),
-          invalid: p.invalid.map((i) => ({ input: mask(i.input), error: i.error })),
-          message: p.cleaned,
-          encoding: p.seg.encoding,
-          characters: p.seg.characters,
-          parts_per_number: p.seg.parts,
-          estimated_credits: p.credits,
-        };
-        if (mode === 'preview') return text({ ...summary, sent: false });
-        if (p.valid.length === 0) return fail('No valid numbers to send to.');
-        if (mode === 'live') {
-          if (!config.allowLive || !liveClient) {
-            return fail('Live sending is switched off by the account owner (KWTSMS_MCP_ALLOW_LIVE). Use mode "test".');
-          }
-          if (confirm !== true) return fail('Live sending needs confirm=true after the user has approved the preview.');
-        } else if (mode !== 'test') return fail('mode must be preview, test or live.');
-        const blocked = capsBlock(p.valid.length, p.credits);
-        if (blocked) return fail(blocked);
-        const api = mode === 'live' ? liveClient : client;
-        const r = await api.send(p.valid, p.cleaned, config.senderId);
-        const ok = r && (r.result === 'OK' || r.result === 'PARTIAL');
-        if (ok) sentLog.push({ at: now(), numbers: p.valid.length, credits: Number(r['points-charged'] ?? p.credits) });
-        const out = {
-          ...summary,
-          sent: ok,
-          result: r?.result,
-          msg_id: r?.['msg-id'],
-          credits_charged: r?.['points-charged'],
-          balance_after: r?.['balance-after'],
-          error: ok ? undefined : [r?.code, r?.description, r?.action].filter(Boolean).join(': '),
-          note: mode === 'test' ? 'Test send: not delivered; its credits are held until you delete it from the Queue in your kwtSMS account.' : undefined,
-        };
-        if (ok && ref) refs.set(ref, out);
-        return ok ? text(out) : { isError: true, content: [{ type: 'text', text: JSON.stringify(out, null, 2) }] };
+      async handler({ mode, confirm = false, ...args }) {
+        if (mode === 'preview') {
+          const p = prepare(args.mobiles, args.message);
+          if (p.error) return fail(p.error);
+          return text({ ...summaryOf(p, 'preview'), sent: false, note: NOTE_OLD });
+        }
+        if (mode === 'test') return doSend('test', args, NOTE_OLD);
+        if (mode !== undefined && mode !== 'live') return fail('mode must be preview, test or live (deprecated; use the separate tools).');
+        if (!config.allowLive || !liveClient) {
+          return fail('Live sending is switched off by the account owner (KWTSMS_MCP_ALLOW_LIVE). send_test_sms sends without delivering.');
+        }
+        if (confirm !== true) return fail('Not sent: send_sms requires confirm: true.');
+        return doSend('live', args);
       },
     },
 
     get_balance: {
       title: 'Get balance',
-      description: 'Current kwtSMS credit balance of the account.',
+      description: 'Returns the credit balance of the kwtSMS account.',
       annotations: { readOnlyHint: true, openWorldHint: true },
       input: {},
       async handler() {
@@ -207,7 +256,7 @@ export function createTools({ client, liveClient = null, config, now = () => Dat
 
     list_sender_ids: {
       title: 'List sender IDs',
-      description: 'Sender IDs registered on the account. Sending always uses the one the owner configured.',
+      description: 'Lists the Sender IDs registered on the kwtSMS account and shows which one this server sends with.',
       annotations: { readOnlyHint: true, openWorldHint: true },
       input: {},
       async handler() {
@@ -218,7 +267,7 @@ export function createTools({ client, liveClient = null, config, now = () => Dat
 
     check_coverage: {
       title: 'Check coverage',
-      description: 'Country prefixes the account can send to.',
+      description: 'Lists the country codes the kwtSMS account can send to, and the ones the account owner allows for this server.',
       annotations: { readOnlyHint: true, openWorldHint: true },
       input: {},
       async handler() {
@@ -231,7 +280,7 @@ export function createTools({ client, liveClient = null, config, now = () => Dat
 
     validate_numbers: {
       title: 'Validate numbers',
-      description: 'Checks phone numbers with kwtSMS (valid, invalid, not covered) without sending anything.',
+      description: 'Checks phone numbers with the kwtSMS API and returns them as valid, invalid or not covered. Sends nothing.',
       annotations: { readOnlyHint: true, openWorldHint: true },
       input: { mobiles: { type: 'array', items: 'string', required: true, description: 'Phone numbers' } },
       async handler({ mobiles }) {
@@ -239,15 +288,17 @@ export function createTools({ client, liveClient = null, config, now = () => Dat
         if (mobiles.length > 200) return fail('At most 200 numbers per call.');
         const r = await client.validate(mobiles.map(String));
         const m = (list) => (Array.isArray(list) ? list.map((n) => mask(String(n))) : list);
-        return text({ ok: m(r.ok), er: m(r.er), nr: m(r.nr), rejected: r.rejected, error: r.error });
+        // 2026-11-09 15:35 +03: an API failure is an error result (review criteria: actionable errors)
+        if (r?.error || r?.result === 'ERROR') return fail(`Could not validate: ${[r?.code, r?.description || r?.error].filter(Boolean).join(': ')}`);
+        return text({ ok: m(r.ok), er: m(r.er), nr: m(r.nr), rejected: r.rejected });
       },
     },
 
     get_message_status: {
       title: 'Get message status',
-      description: 'Status of a sent message by its msg_id.',
+      description: 'Returns the status of a sent message by its msg_id. Kuwait numbers have a send status, not a delivery report.',
       annotations: { readOnlyHint: true, openWorldHint: true },
-      input: { msg_id: { type: 'string', required: true, description: 'msg_id returned by send_sms' } },
+      input: { msg_id: { type: 'string', required: true, description: 'msg_id returned by send_sms or send_test_sms' } },
       async handler({ msg_id: id }) {
         if (!/^[A-Za-z0-9_-]{6,64}$/.test(String(id || ''))) return fail('msg_id looks wrong.');
         const r = await client.status(String(id));

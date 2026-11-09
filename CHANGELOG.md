@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.2.0] - 2026-11-09
+
+### Changed
+- Three tools instead of one for sending: preview_sms (checks numbers, parts and credits, sends nothing), send_test_sms (not delivered) and send_sms (real SMS, only when live sending is on). Clients can now ask before real sends only.
+- send_sms still accepts the old mode setting (preview, test) from 0.1.
+- Clearer tool descriptions; a failed number check is reported as an error.
+
 ## [0.1.2] - 2026-11-09
 
 ### Fixed
