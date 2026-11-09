@@ -14,7 +14,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
-import { createTools, segments, configFromEnv } from '../src/core.js';
+import { createTools, segments, configFromEnv, guardClient, MIN_GAP_MS } from '../src/core.js';
 import { buildServer } from '../src/server.js';
 import { VERSION } from '../src/version.js';
 
@@ -152,5 +152,36 @@ describe('version', () => {
     assert.equal(sj.version, VERSION);
     assert.equal(sj.packages[0].version, VERSION);
     assert.equal(sj.name, pkg.mcpName);
+  });
+});
+
+// 2026-11-09 12:23 +03: rate guard (stop after account errors, calm pace), #1165
+describe('rate guard', () => {
+  it('spaces calls at least MIN_GAP_MS apart, one at a time', async () => {
+    let t = 0; const at = [];
+    const raw = { async status() { at.push(t); return { result: 'OK' }; } };
+    const g = guardClient(raw, { now: () => t, sleep: async (ms) => { t += ms; } });
+    await Promise.all([g.status('a'), g.status('b'), g.status('c')]);
+    assert.deepEqual(at, [0, MIN_GAP_MS, 2 * MIN_GAP_MS]);
+  });
+  it('stops every later call after a wrong password (no loop against the API)', async () => {
+    let n = 0;
+    const raw = { async send() { n++; return { result: 'ERROR', code: 'ERR003' }; }, async status() { n++; return { result: 'OK' }; } };
+    const g = guardClient(raw, { now: () => 0, sleep: async () => {} });
+    await g.send(['x'], 'm', 's');
+    const r = await g.status('id');
+    assert.equal(n, 1);
+    assert.equal(r.code, 'ERR003');
+    assert.match(r.description, /restart/);
+  });
+  it('stops after verify reports wrong credentials', async () => {
+    let n = 0;
+    const raw = { async verify() { n++; return [false, null, 'Wrong username or password.']; } };
+    const g = guardClient(raw, { now: () => 0, sleep: async () => {} });
+    await g.verify(); const r = await g.verify();
+    assert.equal(n, 1); assert.equal(r[0], false);
+  });
+  it('caps numbers per call at 200', () => {
+    assert.equal(configFromEnv({ KWTSMS_MCP_MAX_NUMBERS: '5000' }).maxNumbersPerCall, 200);
   });
 });

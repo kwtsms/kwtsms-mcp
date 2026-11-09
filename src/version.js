@@ -9,4 +9,5 @@
  * DEPENDS:   nothing.
  */
 // 2026-11-09 10:07 +03: 0.1.1, Claude Desktop bundle (.mcpb)
-export const VERSION = '0.1.1';
+// 2026-11-09 12:17 +03: 0.1.2, new README on npm; first release by npm trusted publishing
+export const VERSION = '0.1.2';

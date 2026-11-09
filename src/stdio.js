@@ -13,7 +13,7 @@
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js';
 import { KwtSMS } from 'kwtsms';
 import { buildServer } from './server.js';
-import { configFromEnv } from './core.js';
+import { configFromEnv, guardClient } from './core.js';
 import { VERSION } from './version.js';
 
 const HELP = `kwtsms-mcp ${VERSION}: kwtSMS SMS gateway as an MCP server (stdio).
@@ -46,8 +46,17 @@ if (!config.username || !config.password) {
   process.exit(1);
 }
 const options = { senderId: config.senderId, logFile: process.env.KWTSMS_LOG_FILE || '', appName: `kwtsms-mcp/${VERSION}` };
-const client = new KwtSMS(config.username, config.password, { ...options, testMode: true });
-const liveClient = config.allowLive ? new KwtSMS(config.username, config.password, { ...options, testMode: false }) : null;
+// 2026-11-09 12:23 +03: both clients share one rate guard state through a single guarded dispatcher (#1165)
+const testRaw = new KwtSMS(config.username, config.password, { ...options, testMode: true });
+const liveRaw = config.allowLive ? new KwtSMS(config.username, config.password, { ...options, testMode: false }) : null;
+const guard = guardClient({
+  send: (m, msg, s, live) => (live ? liveRaw : testRaw).send(m, msg, s),
+  verify: () => testRaw.verify(), senderids: () => testRaw.senderids(), coverage: () => testRaw.coverage(),
+  validate: (m) => testRaw.validate(m), status: (id) => testRaw.status(id),
+});
+const client = { ...['verify', 'senderids', 'coverage', 'validate', 'status'].reduce((o, k) => ({ ...o, [k]: (...a) => guard[k](...a) }), {}),
+  send: (m, msg, s) => guard.send(m, msg, s, false) };
+const liveClient = liveRaw ? { send: (m, msg, s) => guard.send(m, msg, s, true) } : null;
 
 const server = buildServer({ client, liveClient, config });
 await server.connect(new StdioServerTransport());

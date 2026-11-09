@@ -139,6 +139,9 @@ An AI model can be tricked by a web page or an email it reads. The server, not t
   [Settings](#settings)).
 - **Your Sender ID** is fixed in your settings; the model cannot choose another one.
 - **No double sends**: a repeated `client_ref` returns the first result.
+- **Protects your server's address**: repeated wrong-password calls from one address get that address blocked, so
+  after a wrong password or another account error the server stops calling the API until you fix it and restart,
+  instead of retrying in a loop. Calls are also sent one at a time, at a calm pace.
 - Your password is never logged or shown, and phone numbers are masked in results.
 
 Use a dedicated kwtSMS API user for AI tools, not your main login.
@@ -178,6 +181,10 @@ your mobile number or account login.
 
 **Can the AI send without me?** Not by default. Live sending must be switched on by you, every live send needs a
 confirmation, and the hourly and daily limits apply.
+
+**The API stopped answering after a wrong password.** Repeated wrong-password calls from one address get that
+address blocked. Fix the API username and password, then contact [kwtSMS support](https://www.kwtsms.com/support.html)
+to unblock it.
 
 ## Changelog
 

@@ -42,11 +42,53 @@ export function configFromEnv(env = process.env) {
     password: env.KWTSMS_PASSWORD || '',
     senderId: env.KWTSMS_SENDER_ID || 'KWT-SMS',
     allowLive: ['1', 'true'].includes(String(env.KWTSMS_MCP_ALLOW_LIVE || '').toLowerCase()), // 2026-11-08 18:07 +03: 'true' from Claude Code plugin settings
-    maxNumbersPerCall: int(env.KWTSMS_MCP_MAX_NUMBERS, 10),
+    // 2026-11-09 12:23 +03: capped at 200 (one API call per send; the library would otherwise batch with short pauses)
+    maxNumbersPerCall: Math.min(int(env.KWTSMS_MCP_MAX_NUMBERS, 10), 200),
     maxSendsPerHour: int(env.KWTSMS_MCP_MAX_PER_HOUR, 50),
     maxCreditsPerDay: int(env.KWTSMS_MCP_MAX_CREDITS_PER_DAY, 100),
     allowedPrefixes: (env.KWTSMS_MCP_ALLOWED_PREFIXES || '965').split(',').map((s) => s.trim()).filter(Boolean),
   };
+}
+
+// 2026-11-09 12:27 +03 (#1165): the kwtSMS firewall bans an
+// address after repeated FAILED logins (ERR003); successful calls are not counted. So the important part is to stop
+// after an account error instead of retrying; spacing the calls (one at a time) is extra care for loops.
+export const MIN_GAP_MS = 1500; // one call at a time, a calm pace
+const STOP_CODES = new Set(['ERR001', 'ERR002', 'ERR003', 'ERR004', 'ERR005', 'ERR024', 'ERR034']);
+const STOP_TEXT = /username or password|authentication error|not have api access|has been blocked|api lockdown|banned proxy|api off|required parameter is missing/i;
+
+/** Wraps a KwtSMS client: one call at a time, MIN_GAP_MS apart, and no calls after an account error. */
+export function guardClient(client, { gapMs = MIN_GAP_MS, now = () => Date.now(), sleep = (ms) => new Promise((r) => setTimeout(r, ms)) } = {}) {
+  let last = -Infinity;
+  let queue = Promise.resolve();
+  let stopped = null;
+  const stopReply = () => ({
+    result: 'ERROR',
+    code: stopped,
+    description: `Stopped after ${stopped}: fix the kwtSMS setting (API username, password, IP or account) and restart this server. Repeated calls can get this address blocked.`,
+  });
+  const call = (name, args) => {
+    const run = async () => {
+      if (stopped) return name === 'verify' ? [false, null, stopReply().description] : stopReply();
+      const wait = last + gapMs - now();
+      if (wait > 0) await sleep(wait);
+      last = now();
+      const r = await client[name](...args);
+      if (Array.isArray(r)) { if (r[0] === false && STOP_TEXT.test(String(r[2] || ''))) stopped = 'ERR003'; }
+      else if (r && STOP_CODES.has(r.code)) stopped = r.code;
+      return r;
+    };
+    const p = queue.then(run, run);
+    queue = p.catch(() => {});
+    return p;
+  };
+  return new Proxy(client, {
+    get(target, prop) {
+      const v = target[prop];
+      return typeof v === 'function' && ['send', 'verify', 'senderids', 'coverage', 'validate', 'status'].includes(prop)
+        ? (...args) => call(prop, args) : v;
+    },
+  });
 }
 
 const text = (obj) => ({ content: [{ type: 'text', text: JSON.stringify(obj, null, 2) }] });
