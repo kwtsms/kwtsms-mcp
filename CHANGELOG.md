@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.1.2] - 2026-11-09
+
+### Changed
+- New README: what you can do with it, a 3-step start and install steps for each AI tool.
+- Releases are published from GitHub without a stored npm token.
+
 ## [0.1.1] - 2026-11-09
 
 ### Added
