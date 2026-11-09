@@ -36,7 +36,9 @@ Use a dedicated kwtSMS API user for AI tools, not your main login.
 Needs Node.js 18 or newer. Get your API username and password from your kwtSMS account
 ([sign up](https://www.kwtsms.com/cportal/signup/)).
 
-**Claude Desktop** (`claude_desktop_config.json`):
+**Claude Desktop, easiest:** download `kwtsms-mcp.mcpb` from the [latest release](https://github.com/kwtsms/kwtsms-mcp/releases/latest) and open it with Claude Desktop (macOS or Windows). An install window opens and asks for your API username and password; nothing else to install.
+
+**Claude Desktop, by hand** (`claude_desktop_config.json`):
 
 ```json
 {

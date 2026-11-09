@@ -2,7 +2,7 @@
   "manifest_version": "0.4",
   "name": "kwtsms-mcp",
   "display_name": "kwtSMS",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Send SMS through kwtSMS (Kuwait): balance, Sender IDs, coverage. Preview and test mode by default.",
   "long_description": "Lets your AI assistant send SMS through the kwtSMS gateway, check your balance, Sender IDs and coverage, validate numbers and read message status. Safe by default: preview and test sends only until you allow live sending, with per-call, hourly and daily limits and a fixed Sender ID.",
   "author": {

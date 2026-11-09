@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.1.1] - 2026-11-09
+
+### Added
+- Claude Desktop extension: download kwtsms-mcp.mcpb from the GitHub release and open it with Claude Desktop to install; it asks for your API username and password and stores the password securely.
+
 ## [0.1.0] - 2026-11-08
 
 ### Added
