@@ -50,10 +50,10 @@ export function configFromEnv(env = process.env) {
   };
 }
 
-// 2026-11-09 12:23 +03: rate guard (engineer, #1165): the kwtSMS firewall bans an address PERMANENTLY after 8 API calls in 10
-// seconds. An AI agent that polls status or retries a wrong password in a loop can trip it, so every call is spaced
-// and an account error stops all further calls until the operator fixes the setting and restarts the server.
-export const MIN_GAP_MS = 1500; // at most 7 calls in any 10 seconds
+// 2026-11-09 12:27 +03 (#1165): the kwtSMS firewall bans an
+// address after repeated FAILED logins (ERR003); successful calls are not counted. So the important part is to stop
+// after an account error instead of retrying; spacing the calls (one at a time) is extra care for loops.
+export const MIN_GAP_MS = 1500; // one call at a time, a calm pace
 const STOP_CODES = new Set(['ERR001', 'ERR002', 'ERR003', 'ERR004', 'ERR005', 'ERR024', 'ERR034']);
 const STOP_TEXT = /username or password|authentication error|not have api access|has been blocked|api lockdown|banned proxy|api off|required parameter is missing/i;
 
