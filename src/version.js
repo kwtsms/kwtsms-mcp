@@ -8,4 +8,5 @@
  * USAGE:     import { VERSION } from './version.js'
  * DEPENDS:   nothing.
  */
-export const VERSION = '0.1.0';
+// 2026-11-09 10:07 +03: 0.1.1, Claude Desktop bundle (.mcpb)
+export const VERSION = '0.1.1';

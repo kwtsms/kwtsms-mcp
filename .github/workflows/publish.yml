@@ -65,3 +65,12 @@ jobs:
           if gh release view "$TAG" >/dev/null 2>&1; then echo "release $TAG exists"; exit 0; fi
           awk "/^## \\[${V}\\]/{f=1; next} /^## \\[/{if(f) exit} f{print}" CHANGELOG.md > /tmp/notes.md
           gh release create "$TAG" --title "$TAG" --latest --notes-file /tmp/notes.md
+      # 2026-11-09 10:07 +03: Claude Desktop bundle attached to the release (from a clean copy with production dependencies only)
+      - name: Claude Desktop bundle (.mcpb) on the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if gh release view "$TAG" --json assets -q '.assets[].name' | grep -qx kwtsms-mcp.mcpb; then echo "bundle already attached"; exit 0; fi
+          mkdir /tmp/b && git archive HEAD | tar x -C /tmp/b
+          (cd /tmp/b && npm ci --omit=dev --ignore-scripts && npx -y @anthropic-ai/mcpb@2.1.2 validate manifest.json && npx -y @anthropic-ai/mcpb@2.1.2 pack . /tmp/kwtsms-mcp.mcpb)
+          gh release upload "$TAG" /tmp/kwtsms-mcp.mcpb
