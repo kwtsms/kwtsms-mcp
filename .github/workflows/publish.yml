@@ -31,22 +31,19 @@ jobs:
         with:
           node-version: '22'
           registry-url: 'https://registry.npmjs.org'
-          cache: npm
+          # 2026-11-09 10:36 +03: no dependency cache in release builds (npm trusted publishing guide)
       - name: Upgrade npm for trusted publishing
         run: npm install -g npm@^11.5.1
       - run: npm ci
       - run: npm test
       - name: Version matches the tag
         run: test "v$(node -p "require('./package.json').version")" = "$TAG"
-      # trusted publishing (OIDC) after the first release; the very first publish of a new package uses the
-      # one-time NPM_TOKEN secret, which is deleted afterwards
+      # 2026-11-09 10:36 +03: npm trusted publishing (OIDC) only; the one-time NPM_TOKEN secret was deleted after 0.1.1
       - name: npm publish (skipped when npm already has this version)
         run: |
           V="${TAG#v}"
           if npm view "kwtsms-mcp@$V" version >/dev/null 2>&1; then echo "npm already has $V"; exit 0; fi
           npm publish --access public --provenance --ignore-scripts
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
       - name: Wait until npm serves the version (the MCP Registry checks npm)
         run: |
           V="${TAG#v}"
