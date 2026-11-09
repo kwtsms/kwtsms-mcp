@@ -1,6 +1,6 @@
 {
   "name": "kwtsms-mcp",
-  "version": "0.1.2",
+  "version": "0.2.0",
   "description": "kwtSMS SMS gateway (Kuwait) as an MCP server: AI assistants send SMS, check balance, sender IDs and coverage, with test mode and send limits by default.",
   "type": "module",
   "bin": {

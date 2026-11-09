@@ -21,14 +21,14 @@ const HELP = `kwtsms-mcp ${VERSION}: kwtSMS SMS gateway as an MCP server (stdio)
 Environment:
   KWTSMS_USERNAME, KWTSMS_PASSWORD   kwtSMS API username and password (required; use an API user, not your login)
   KWTSMS_SENDER_ID                   sender ID used for every send (default KWT-SMS, for testing only)
-  KWTSMS_MCP_ALLOW_LIVE=1 (or true)  allow mode "live" (real delivery); without it only preview and test work
+  KWTSMS_MCP_ALLOW_LIVE=1 (or true)  allow send_sms (real delivery); without it only preview_sms and send_test_sms work
   KWTSMS_MCP_MAX_NUMBERS             numbers per call (default 10)
   KWTSMS_MCP_MAX_PER_HOUR            numbers per hour (default 50)
   KWTSMS_MCP_MAX_CREDITS_PER_DAY     credits per day (default 100)
   KWTSMS_MCP_ALLOWED_PREFIXES        comma list of allowed country codes (default 965)
   KWTSMS_LOG_FILE                    JSONL log of API calls, password masked (default: no log)
 
-Tools: send_sms, get_balance, list_sender_ids, check_coverage, validate_numbers, get_message_status.
+Tools: preview_sms, send_test_sms, send_sms, get_balance, list_sender_ids, check_coverage, validate_numbers, get_message_status.
 `;
 
 if (process.argv.includes('-h') || process.argv.includes('--help')) {

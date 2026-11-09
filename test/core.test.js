@@ -40,15 +40,36 @@ const cfg = (over = {}) => ({ ...configFromEnv({ KWTSMS_SENDER_ID: 'MyShop' }), 
 const body = (r) => JSON.parse(r.content[0].text);
 
 describe('send_sms', () => {
-  it('preview (default) sends nothing and reports parts and credits', async () => {
+  // 2026-11-09 15:35 +03: 0.2.0 tools: preview_sms, send_test_sms, send_sms (live); mode kept for 0.1.x callers
+  it('preview_sms sends nothing and reports parts and credits', async () => {
     const client = fakeClient();
     const t = createTools({ client, config: cfg() });
-    const r = await t.send_sms.handler({ mobiles: [NUM, NUM2], message: 'Hello' });
+    const r = await t.preview_sms.handler({ mobiles: [NUM, NUM2], message: 'Hello' });
     assert.equal(client.calls.length, 0);
     const b = body(r);
     assert.equal(b.sent, false);
     assert.equal(b.estimated_credits, 2);
     assert.equal(b.sender, 'MyShop');
+  });
+
+  it('send_test_sms sends in test mode; send_sms with no mode and no confirm sends nothing (0.1.x safety)', async () => {
+    const client = fakeClient();
+    const live = fakeClient();
+    const t = createTools({ client, liveClient: live, config: cfg({ allowLive: true }) });
+    assert.equal(body(await t.send_test_sms.handler({ mobiles: [NUM], message: 'Hi' })).sent, true);
+    assert.equal(client.calls.length, 1);
+    const r = await t.send_sms.handler({ mobiles: [NUM], message: 'Hi' });
+    assert.equal(r.isError, true);
+    assert.equal(live.calls.length, 0);
+  });
+
+  it('send_sms mode preview still previews, with a note', async () => {
+    const client = fakeClient();
+    const t = createTools({ client, config: cfg() });
+    const b = body(await t.send_sms.handler({ mobiles: [NUM], message: 'Hi', mode: 'preview' }));
+    assert.equal(b.sent, false);
+    assert.match(b.note, /preview_sms/);
+    assert.equal(client.calls.length, 0);
   });
 
   it('test mode goes through the test client with the fixed sender', async () => {
@@ -99,8 +120,9 @@ describe('send_sms', () => {
 
   it('numbers are masked in results', async () => {
     const t = createTools({ client: fakeClient(), config: cfg() });
-    const b = body(await t.send_sms.handler({ mobiles: [NUM], message: 'x' }));
-    assert.ok(!JSON.stringify(b).includes(NUM));
+    for (const r of [await t.preview_sms.handler({ mobiles: [NUM], message: 'x' }), await t.send_test_sms.handler({ mobiles: [NUM], message: 'x' })]) {
+      assert.ok(!JSON.stringify(body(r)).includes(NUM));
+    }
   });
 });
 
@@ -128,17 +150,23 @@ describe('segments', () => {
 });
 
 describe('MCP protocol', () => {
-  it('lists the six tools with annotations and answers a preview call', async () => {
+  it('lists the eight tools with annotations and answers a preview call', async () => {
     const server = buildServer({ client: fakeClient(), config: cfg() });
     const [a, b] = InMemoryTransport.createLinkedPair();
     const c = new Client({ name: 'test', version: '1' });
     await Promise.all([server.connect(a), c.connect(b)]);
     const { tools } = await c.listTools();
     assert.deepEqual(tools.map((x) => x.name).sort(),
-      ['check_coverage', 'get_balance', 'get_message_status', 'list_sender_ids', 'send_sms', 'validate_numbers']);
-    assert.equal(tools.find((x) => x.name === 'send_sms').annotations.destructiveHint, true);
-    assert.equal(tools.find((x) => x.name === 'get_balance').annotations.readOnlyHint, true);
-    const r = await c.callTool({ name: 'send_sms', arguments: { mobiles: [NUM], message: 'Hi' } });
+      ['check_coverage', 'get_balance', 'get_message_status', 'list_sender_ids', 'preview_sms', 'send_sms', 'send_test_sms', 'validate_numbers']);
+    const ann = (n) => tools.find((x) => x.name === n).annotations;
+    assert.equal(ann('send_sms').destructiveHint, true);
+    assert.equal(ann('send_test_sms').destructiveHint, false);
+    assert.equal(ann('send_test_sms').readOnlyHint, false);
+    assert.equal(ann('preview_sms').readOnlyHint, true);
+    assert.equal(ann('preview_sms').openWorldHint, false);
+    for (const n of ['get_balance', 'list_sender_ids', 'check_coverage', 'validate_numbers', 'get_message_status']) assert.equal(ann(n).readOnlyHint, true);
+    for (const t of tools) assert.ok(t.title, `${t.name} has a title`);
+    const r = await c.callTool({ name: 'preview_sms', arguments: { mobiles: [NUM], message: 'Hi' } });
     assert.equal(JSON.parse(r.content[0].text).sent, false);
     await c.close();
   });
