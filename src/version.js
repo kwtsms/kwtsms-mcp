@@ -11,4 +11,5 @@
 // 2026-11-09 10:07 +03: 0.1.1, Claude Desktop bundle (.mcpb)
 // 2026-11-09 12:17 +03: 0.1.2, new README on npm; first release by npm trusted publishing
 // 2026-11-09 15:36 +03: 0.2.0, separate preview, test and live send tools (Anthropic directory rules)
-export const VERSION = '0.2.0';
+// 2026-11-09 16:22 +03: 0.2.1, reads Claude plugin option names
+export const VERSION = '0.2.1';
