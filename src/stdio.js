@@ -46,7 +46,7 @@ if (!config.username || !config.password) {
   process.exit(1);
 }
 const options = { senderId: config.senderId, logFile: process.env.KWTSMS_LOG_FILE || '', appName: `kwtsms-mcp/${VERSION}` };
-// 2026-11-09 12:23 +03: both clients share one rate guard state through a single guarded dispatcher (firewall: 8 calls / 10 s)
+// 2026-11-09 12:23 +03: both clients share one rate guard state through a single guarded dispatcher (#1165)
 const testRaw = new KwtSMS(config.username, config.password, { ...options, testMode: true });
 const liveRaw = config.allowLive ? new KwtSMS(config.username, config.password, { ...options, testMode: false }) : null;
 const guard = guardClient({
