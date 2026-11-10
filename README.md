@@ -15,7 +15,7 @@ Send SMS from your AI assistant, through kwtSMS, the Kuwaiti SMS gateway. Tell C
 client what to send and to whom, in English or Arabic: it writes the message, fixes the numbers, shows you the cost,
 and sends when you say yes. Free and open source.
 
-kwtSMS delivers to Zain, Ooredoo, stc and Virgin in Kuwait and to more than 200 countries, with your own Sender ID,
+kwtSMS delivers to Zain, Ooredoo, STC and Virgin in Kuwait and to more than 200 countries, with your own Sender ID,
 free API testing and credits that do not expire.
 
 ## What you can do with it
