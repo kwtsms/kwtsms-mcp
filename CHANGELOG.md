@@ -14,12 +14,9 @@
 
 ## [0.1.2] - 2026-11-09
 
-### Fixed
-- Protects your server's address: after a wrong password or another account error the server stops calling the API until you fix it and restart (repeated wrong-password calls get an address blocked). Calls are sent one at a time, at a calm pace.
-
 ### Changed
-- New README: what you can do with it, a 3-step start and install steps for each AI tool.
-- Releases are published from GitHub without a stored npm token.
+- New README with a 3-step start.
+- Bug fixes.
 
 ## [0.1.1] - 2026-11-09
 
