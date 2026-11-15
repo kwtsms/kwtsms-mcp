@@ -1,5 +1,10 @@
 # Changelog
 
+## [0.2.2] - 2026-11-16
+
+### Changed
+- The MCP Registry entry now also lists the hosted server (https://mcp.kwtsms.com/mcp), so clients can connect without installing anything.
+
 ## [0.2.1] - 2026-11-09
 
 ### Changed
