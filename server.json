@@ -6,12 +6,12 @@
     "url": "https://github.com/kwtsms/kwtsms-mcp",
     "source": "github"
   },
-  "version": "0.2.1",
+  "version": "0.2.2",
   "packages": [
     {
       "registryType": "npm",
       "identifier": "kwtsms-mcp",
-      "version": "0.2.1",
+      "version": "0.2.2",
       "transport": {
         "type": "stdio"
       },
@@ -45,6 +45,12 @@
           "isSecret": false
         }
       ]
+    }
+  ],
+  "remotes": [
+    {
+      "type": "streamable-http",
+      "url": "https://mcp.kwtsms.com/mcp"
     }
   ]
 }
