@@ -152,6 +152,11 @@ An AI model can be tricked by a web page or an email it reads. The server, not t
 
 Use a dedicated kwtSMS API user for AI tools, not your main login.
 
+Why an MCP server and not a script: this is the safest way for an AI tool to send SMS (no shell needed, the AI never
+sees your password, test mode and limits enforced). Add the [kwtSMS skill](https://github.com/kwtsms/kwtsms-ai) next to
+it so the AI also knows the API rules. For terminal agents and cron jobs, [kwtsms-cli](https://github.com/kwtsms/kwtsms-cli)
+is the alternative. Raw `curl` examples in the API docs are for developers writing code, not for agents.
+
 ## Example
 
 > "Send 'Your order is ready' to 965XXXXXXXX"
