@@ -117,6 +117,26 @@ claude mcp add kwtsms --env KWTSMS_USERNAME=your_api_username --env KWTSMS_PASSW
 **Cursor, VS Code and other MCP clients.** Add a server with the command `npx -y kwtsms-mcp` and the same environment
 variables, in the MCP settings of your tool.
 
+### Hosted server (nothing to install)
+
+Remote MCP URL: `https://mcp.kwtsms.com/mcp` (Streamable HTTP, OAuth sign-in).
+
+Add it as a remote or custom connector in any MCP client that supports remote servers with OAuth (claude.ai, Claude
+Desktop, Claude Code `claude mcp add --transport http kwtsms https://mcp.kwtsms.com/mcp`, and others). A kwtSMS sign-in
+page opens: enter your API username and password and pick your Sender ID. Live sending is off until you turn it on
+there. Your AI tool gets a sign-in token, never your password.
+
+### AI agent platforms
+
+| Platform | How to use kwtSMS there |
+|---|---|
+| [Zapier MCP](https://zapier.com/mcp/kwtsms) | Uses the kwtSMS app on Zapier |
+| [Pipedream MCP](https://mcp.pipedream.com/app/kwtsms) | Uses the kwtSMS app on Pipedream |
+| MCP gateways | Add `https://mcp.kwtsms.com/mcp` as a remote server, if the gateway supports OAuth sign-in |
+
+Zapier and Pipedream connect through their own kwtSMS apps, so the test mode, limits and preview of this server do not
+apply there. Test with your own number first.
+
 ## Settings
 
 | Variable | Default | Meaning |
