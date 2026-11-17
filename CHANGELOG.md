@@ -1,5 +1,10 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+- The server now shows the kwtSMS logo and name in MCP clients that display server icons (Claude Desktop extension icon included).
+
 ## [0.2.2] - 2026-11-16
 
 ### Changed
