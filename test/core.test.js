@@ -95,6 +95,21 @@ describe('send_sms', () => {
     assert.equal(client.calls.length, 0);
   });
 
+  // 2026-11-23 18:40 +03: #1601 item 3: account Test mode forces test=1 and the API answers "test": true
+  it('a live send forced to test by the account says so', async () => {
+    const live = fakeClient();
+    const orig = live.send;
+    live.send = async (...a) => ({ ...(await orig(...a)), test: true });
+    const t = createTools({ client: fakeClient(), liveClient: live, config: cfg({ allowLive: true }) });
+    const b = body(await t.send_sms.handler({ mobiles: [NUM], message: 'x', mode: 'live', confirm: true }));
+    assert.equal(b.account_test_mode, true);
+    assert.match(b.note, /Test mode is on in your kwtSMS account/);
+    const plain = body(await createTools({ client: fakeClient(), liveClient: fakeClient(), config: cfg({ allowLive: true }) })
+      .send_sms.handler({ mobiles: [NUM], message: 'x', mode: 'live', confirm: true }));
+    assert.equal(plain.account_test_mode, undefined);
+    assert.equal(plain.note, undefined);
+  });
+
   it('enforces numbers per call, allowed prefixes and the hourly cap', async () => {
     const client = fakeClient();
     const t = createTools({ client, config: cfg({ maxNumbersPerCall: 2, maxSendsPerHour: 3 }) });

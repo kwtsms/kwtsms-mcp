@@ -3,6 +3,7 @@
 ## [Unreleased]
 
 ### Added
+- When Test mode is on in your kwtSMS account, a real send now says it was queued as a test and not delivered.
 - The server now shows the kwtSMS logo and name in MCP clients that display server icons (Claude Desktop extension icon included).
 
 ## [0.2.2] - 2026-11-16

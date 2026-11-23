@@ -156,6 +156,10 @@ export function createTools({ client, liveClient = null, config, now = () => Dat
   // accepts the 0.1.x `mode` argument (preview, test) so older prompts keep working; it says so in its result.
   const NOTE_TEST = 'Test send: not delivered; its credits are held until you delete it from the Sending Queue in your kwtSMS account.';
   const NOTE_OLD = 'mode is from kwtsms-mcp 0.1; use preview_sms or send_test_sms.';
+  // 2026-11-23 18:40 +03: #1601 item 3 (field live #1534 c15302): the send answer carries "test": true when the account's own
+  // Test mode setting forced test=1; then a live send was NOT delivered and the user must be told why.
+  const NOTE_ACCOUNT_TEST = 'Test mode is on in your kwtSMS account: this SMS was queued as a test and not delivered. ' +
+    'Its credits are held until you delete it from the Sending Queue. Turn Test mode off in your kwtSMS account to deliver.';
 
   function summaryOf(p, kind) {
     return {
@@ -183,7 +187,8 @@ export function createTools({ client, liveClient = null, config, now = () => Dat
     const r = await api.send(p.valid, p.cleaned, config.senderId);
     const ok = r && (r.result === 'OK' || r.result === 'PARTIAL');
     if (ok) sentLog.push({ at: now(), numbers: p.valid.length, credits: Number(r['points-charged'] ?? p.credits) });
-    const note = [kind === 'test' ? NOTE_TEST : '', extraNote || ''].filter(Boolean).join(' ') || undefined;
+    const accountTest = ok && kind === 'live' && r.test === true; // 2026-11-23 18:40 +03: #1601, account Test mode forced test=1
+    const note = [kind === 'test' ? NOTE_TEST : '', accountTest ? NOTE_ACCOUNT_TEST : '', extraNote || ''].filter(Boolean).join(' ') || undefined;
     const out = {
       ...summary,
       sent: ok,
@@ -191,6 +196,7 @@ export function createTools({ client, liveClient = null, config, now = () => Dat
       msg_id: r?.['msg-id'],
       credits_charged: r?.['points-charged'],
       balance_after: r?.['balance-after'],
+      account_test_mode: accountTest || undefined, // 2026-11-23 18:40 +03: #1601
       error: ok ? undefined : [r?.code, r?.description, r?.action].filter(Boolean).join(': '),
       note,
     };
