@@ -10,6 +10,7 @@
 [![Node](https://img.shields.io/badge/Node-18%2B-339933?logo=node.js&logoColor=white)](https://nodejs.org)
 [![MCP Registry](https://img.shields.io/badge/MCP%20Registry-io.github.kwtsms%2Fkwtsms--mcp-blue)](https://registry.modelcontextprotocol.io)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
+[![kwtsms/kwtsms-mcp MCP server](https://glama.ai/mcp/servers/kwtsms/kwtsms-mcp/badges/score.svg)](https://glama.ai/mcp/servers/kwtsms/kwtsms-mcp)
 
 Send SMS from your AI assistant, through kwtSMS, the Kuwaiti SMS gateway. Tell Claude, Cursor, VS Code or any MCP
 client what to send and to whom, in English or Arabic: it writes the message, fixes the numbers, shows you the cost,
